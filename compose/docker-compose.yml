@@ -1,0 +1,64 @@
+# https://docs.docker.com/compose/compose-file/compose-file-v3/
+version: "3.3"
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
+services:
+  traefik:
+    image: traefik:v3.1
+    container_name: "traefik"
+    hostname: traefik
+    restart: unless-stopped # on-failure, always, unless-stopped
+    networks: [frontend, backend]
+    env_file: [env.ini]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik-192.168.0.100.nip.io`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.service=api@internal"
+    # command:
+      # - "--log.level=DEBUG"
+      # - "--api.dashboard=true"
+      # - "--providers.docker"
+      # - "--providers.docker.exposedbydefault=false"
+      # - "--entryPoints.ssh.address=:22"
+      # - "--entryPoints.dns-tcp.address=:53"
+      # - "--entryPoints.dns-udp.address=:53/udp"
+      # - "--entrypoints.web.address=:80"
+      # - "--entrypoints.websecure.address=:443"
+    ports:
+      - 127.0.0.1:22:22
+      - 127.0.0.1:53:53
+      - 127.0.0.1:53:53/udp
+      - 127.0.0.1:80:80
+      - 127.0.0.1:443:443
+      - 127.0.0.1:5005:5005
+      # - 127.0.0.1:8082:8082  # ping
+      - 192.168.0.100:22:22
+      - 192.168.0.100:53:53
+      - 192.168.0.100:53:53/udp
+      - 192.168.0.100:80:80
+      - 192.168.0.100:443:443
+      - 192.168.0.100:5005:5005
+      # - 192.168.0.100:8082:8082  # ping
+
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - ./traefik.yml:/etc/traefik/traefik.yml
+
+  whoami:
+    image: "traefik/whoami"
+    container_name: "whoami"
+    hostname: whoami
+    restart: unless-stopped
+    profiles: [who]
+    networks: [backend]
+    depends_on: [traefik]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.entrypoints=web"
+      - "traefik.http.routers.whoami.rule=Host(`whoami-192.168.0.100.nip.io`)"

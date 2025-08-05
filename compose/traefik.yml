@@ -1,0 +1,31 @@
+providers:
+  docker:
+    exposedbydefault: false
+    defaultRule: "Host(`{{ trimPrefix `/` .Name }}-192.168.0.100.nip.io`)"
+
+api:
+  dashboard: true
+  # insecure: true  # opens port :8080
+
+log:
+  level: "DEBUG"
+
+entryPoints:
+  web:
+    address: ":80"
+    asDefault: true
+  websecure:
+    address: ":443"
+  ssh:
+    address: ":22"
+  dns-tcp:
+    address: ":53"
+  dns-udp:
+    address: ":53/udp"
+  registry:
+    address: ":5005"
+#   ping:
+#     address: ":8082"
+
+# ping:
+#   entryPoint: "ping"
